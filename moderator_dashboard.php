@@ -1,8 +1,6 @@
 <?php
 
-if (!isset($_SESSION)) {
-	session_start();
-}
+session_start();
 
 require 'connect.php';
 
@@ -31,33 +29,34 @@ if (!empty($_POST)) {
                     if ($_POST['type'] == '05' and $parent_branch['parent'] != $_SESSION['auth']['branch']) {
                         echo 'You don\'t have permission for this! 2';
                     } else {
-                        
+
 
                         $branch['name'] = $_POST['name'];
                         $branch['type'] = $_POST['type'];
                         $branch['parent'] = $parent;
-                
-                    
+
+
                         if ($_POST['type'] != '05') {
                             $branch['code'] = $_POST['code'];
                         } else {
                             $random_code = '5' . rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9);
-                    
+
                             if (!$check_unique = R::findOne('branch', 'code = ?', [$random_code])) {
                                 $branch['code'] = $random_code;
                             }
                         }
-                    
+
                         R::store($branch);
                     }
                 }
-    
             } else {
                 echo 'Parent not exists!';
             }
         } else {
             echo 'This code already taken!';
         }
+
+        echo $parent;
     } else if ($_POST['post_type'] == 'contact') {
         $contact = R::dispense('contact');
 
@@ -82,6 +81,26 @@ if ($_SESSION['auth']['branch'] == '11037') {
     $filial = 'Филиал';
     $otdel = 'Отдел';
 }
+
+function findChildrenWithTypes($parentCode, $types)
+{
+    $children = R::findAll('contact', 'parent = ?', [$parentCode]);
+
+    $result = [];
+
+    foreach ($children as $child) {
+        if (in_array($child->type, $types)) {
+            $child->children = findChildrenWithTypes($child->code, $types);
+            $result[] = $child;
+        } else {
+            $result = array_merge($result, findChildrenWithTypes($child->code, $types));
+        }
+    }
+
+    return $result;
+}
+
+$contacts = findChildrenWithTypes($_SESSION['auth']['branch'], $types);
 
 ?>
 
@@ -118,20 +137,20 @@ if ($_SESSION['auth']['branch'] == '11037') {
                         <option value="05"><?php echo $otdel; ?></option>
                     </select>
                 </div>
-                <div  class="field" id="parent">
+                <div class="field" id="parent">
                     <label><?php echo $filial; ?></label>
                     <?php $branches = R::findAll('branch', 'parent = ?', [$_SESSION['auth']['branch']]); ?>
                     <select class="ui selection dropdown" name="parent" id="parent_select">
-                        <?php foreach ($branches as $branch): ?>
+                        <?php foreach ($branches as $branch) : ?>
                             <option value="<?php echo $branch['code']; ?>"><?php echo $branch['name']; ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div  class="field" id="code">
+                <div class="field" id="code">
                     <label>Код</label>
                     <input name="code">
                 </div>
-                <div  class="field">
+                <div class="field">
                     <label>Названия</label>
                     <input name="name">
                 </div>
@@ -149,7 +168,7 @@ if ($_SESSION['auth']['branch'] == '11037') {
                 </thead>
                 <tbody>
                     <?php $branches = R::findAll('branch', 'parent = ? and type = ?', [$_SESSION['auth']['branch'], '04']); ?>
-                    <?php foreach ($branches as $branch): ?>
+                    <?php foreach ($branches as $branch) : ?>
                         <tr>
                             <td><?php echo $branch['id']; ?></td>
                             <td><?php echo $branch['type']; ?></td>
@@ -171,22 +190,22 @@ if ($_SESSION['auth']['branch'] == '11037') {
             <form class="ui form" style="width: 500px;" action="moderator_dashboard.php" method="POST">
                 <h1>Добавить контакт</h1>
                 <input type="hidden" name="post_type" value="contact">
-                <div  class="field" id="parent_branch">
+                <div class="field" id="parent_branch">
                     <label><?php echo $filial; ?></label>
                     <?php $branches = R::findAll('branch', 'parent = ? and type = ?', [$_SESSION['auth']['branch'], '04']); ?>
                     <select class="ui selection dropdown" name="parent_branch" id="parent_branch_select" onchange="func();">
                         <option value="">Выберите</option>
-                        <?php foreach ($branches as $branch): ?>
+                        <?php foreach ($branches as $branch) : ?>
                             <option value="<?php echo $branch['code']; ?>"><?php echo $branch['name']; ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div  class="field" id="parent_otdel">
+                <div class="field" id="parent_otdel">
                     <label><?php echo $otdel; ?></label>
                     <?php $branches = R::findAll('branch', 'type = ?', ['05']); ?>
                     <select class="ui selection dropdown" name="parent" id="parent_otdel_select">
                         <option value="" class="">Выберите</option>
-                        <?php foreach ($branches as $branch): ?>
+                        <?php foreach ($branches as $branch) : ?>
                             <option value="<?php echo $branch['code']; ?>" class="<?php echo $branch['parent']; ?>"><?php echo $branch['name']; ?></option>
                         <?php endforeach; ?>
                     </select>
@@ -219,38 +238,64 @@ if ($_SESSION['auth']['branch'] == '11037') {
                     <label>Номер</label>
                     <input name="tel_out">
                 </div>
-                
+
                 <button class="ui blue button" type="submit">Отправить</button>
             </form>
+            <table class="ui celled table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Имя</th>
+                        <th>Фамилия</th>
+                        <th>Отчество</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($contacts as $contact) : ?>
+                        <tr>
+                            <td><?php echo $contact['id']; ?></td>
+                            <td><?php echo $contact['first_name']; ?></td>
+                            <td><?php echo $contact['last_name']; ?></td>
+                            <td><?php echo $contact['middle_name']; ?></td>
+                            <td>
+                                <div class="ui vertical buttons">
+                                    <a class="ui mini button" href="edit_contact.php?id=<?php echo $contact['id']; ?>">Изменить</a>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
 
 <script>
-let parent = document.getElementById('parent');
+    let parent = document.getElementById('parent');
 
-parent.style.display = 'none';
+    parent.style.display = 'none';
 
-function changeDetect() {
-    let select_value = document.getElementById('type_select').value;
-    let code = document.getElementById('code');
-    
-    if (select_value == '05') {
-        code.style.display = 'none';
-        parent.style.display = 'block';
-    } else {
-        code.style.display = 'block';
-        parent.style.display = 'none';
+    function changeDetect() {
+        let select_value = document.getElementById('type_select').value;
+        let code = document.getElementById('code');
+
+        if (select_value == '05') {
+            code.style.display = 'none';
+            parent.style.display = 'block';
+        } else {
+            code.style.display = 'block';
+            parent.style.display = 'none';
+        }
     }
-}
 
-function func() {
-    let select_value = $('#parent_branch_select option:selected').val();
-    $('#parent_otdel_select option:not(.' + select_value + ')').remove();
+    function func() {
+        let select_value = $('#parent_branch_select option:selected').val();
+        $('#parent_otdel_select option:not(.' + select_value + ')').remove();
 
-    //alert('#parent_otdel_select option:not(.' + select_value + ')');
-}
+        alert('#parent_otdel_select option:not(.' + select_value + ')');
+    }
 
-$('.selection').dropdown();
+    $('.selection').dropdown();
 </script>

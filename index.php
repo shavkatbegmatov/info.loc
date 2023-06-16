@@ -226,6 +226,7 @@ $contacts = R::findAll('contact');
                                 <th>Filial</th>
                                 <th>Bolim</th>
                             </tr>
+                            <?php $r = 0; ?>
                             <?php foreach ($contacts as $contact): ?>
                                 <tr>
                                     <td><?php echo $contact['id']; ?></td>
@@ -241,10 +242,10 @@ $contacts = R::findAll('contact');
                                     $branch_05 = R::findOne('branch', 'code = ?', [$contact['parent']]);
                                     $branch_04 = R::findOne('branch', 'code = ?', [$branch_05['parent']]);
                                     ?>
-                                    <td><?php echo $branch_04['name']; ?></td>
+                                    <td><?php echo $branch_04['name'] . ' - ' . $r; ?></td>
                                     <td><?php echo $branch_05['name']; ?></td>
                                 </tr>
-                            <?php endforeach; ?>
+                            <?php $r++; endforeach; ?>
                         </table>
                     </div>
                 </div>
