@@ -1,6 +1,8 @@
 <?php
 
-session_start();
+if (!isset($_SESSION)) {
+	session_start();
+}
 
 require 'connect.php';
 
@@ -221,6 +223,8 @@ $contacts = R::findAll('contact');
                                 <th>Ichki nomeri</th>
                                 <th>Korporativ nomeri</th>
                                 <th>Shaxsiy nomeri</th>
+                                <th>Filial</th>
+                                <th>Bolim</th>
                             </tr>
                             <?php foreach ($contacts as $contact): ?>
                                 <tr>
@@ -233,6 +237,12 @@ $contacts = R::findAll('contact');
                                     <td><?php echo $contact['tel_in']; ?></td>
                                     <td><?php echo $contact['tel_corp']; ?></td>
                                     <td><?php echo $contact['tel_out']; ?></td>
+                                    <?php
+                                    $branch_05 = R::findOne('branch', 'code = ?', [$contact['parent']]);
+                                    $branch_04 = R::findOne('branch', 'code = ?', [$branch_05['parent']]);
+                                    ?>
+                                    <td><?php echo $branch_04['name']; ?></td>
+                                    <td><?php echo $branch_05['name']; ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </table>

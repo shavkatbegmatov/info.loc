@@ -1,6 +1,8 @@
 <?php
 
-session_start();
+if (!isset($_SESSION)) {
+	session_start();
+}
 
 require 'connect.php';
 
@@ -20,7 +22,7 @@ if (!empty($_POST)) {
         } else {
             $parent = $_POST['parent'];
         }
-        if (!$check_unique = R::findOne('branch', 'code = ?', [$_POST['code']])) {
+        if ($check_unique = R::findOne('branch', 'code = ?', [$parent])) {
             if ($check_isset = R::findOne('branch', 'code = ?', [$parent])) {
                 if ($_POST['type'] == '05' and $check_isset['type'] == '03') {
                     echo 'Parent\'s type is not valid!';
@@ -39,7 +41,7 @@ if (!empty($_POST)) {
                         if ($_POST['type'] != '05') {
                             $branch['code'] = $_POST['code'];
                         } else {
-                            $random_code = '5' + rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9);
+                            $random_code = '5' . rand(0, 9) . rand(0, 9) . rand(0, 9) . rand(0, 9);
                     
                             if (!$check_unique = R::findOne('branch', 'code = ?', [$random_code])) {
                                 $branch['code'] = $random_code;
@@ -73,15 +75,13 @@ if (!empty($_POST)) {
 }
 
 
-if ($_SESSION['auth']['branch'] == '00001') {
+if ($_SESSION['auth']['branch'] == '11037') {
     $filial = 'Департамент';
     $otdel = 'Управление';
 } else {
     $filial = 'Филиал';
     $otdel = 'Отдел';
 }
-
-echo $_SESSION['user']['branch'];
 
 ?>
 
@@ -93,15 +93,23 @@ echo $_SESSION['user']['branch'];
 
     <br>
 
-    <a href="auth_logout.php" class="ui red button">Покинуть</a>
-    <h1>Ваш регион: <?php echo R::findOne('branch', 'code = ?', [$_SESSION['auth']['branch']])['name']; ?></h1>
-    <br>
+    <div class="ui relaxed grid">
+        <div class="eight wide column">
+            <a href="auth_logout.php" class="ui red button">Покинуть</a>
+        </div>
+        <div class="eight wide column">
+            <h1>Ваш филиал: <?php echo R::findOne('branch', 'code = ?', [$_SESSION['auth']['branch']])['name']; ?></h1>
+        </div>
+    </div>
+
+
+
     <br>
 
     <div class="ui two column very relaxed grid">
         <div class="column">
             <form class="ui form" style="width: 500px;" action="moderator_dashboard.php" method="POST">
-                <h1>Добавить <?php echo mb_strtolower($filial); ?></h1>
+                <h1>Добавить <?php echo $filial; ?></h1>
                 <input type="hidden" name="post_type" value="branch">
                 <div class="field">
                     <label>Тип</label>
