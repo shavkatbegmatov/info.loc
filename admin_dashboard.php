@@ -39,9 +39,9 @@ $members = R::findAll('member', 'role = ?', ['moderator']);
 
 ?>
 
-<script src="assets/jquery_3.6.4.min.js"></script>
-<script src="assets/semantic.min.js"></script>
-<link rel="stylesheet" href="assets/semantic.min.css" />
+<script src="assets/js/jquery_3.6.4.min.js"></script>
+<script src="assets/js/semantic.min.js"></script>
+<link rel="stylesheet" href="assets/css/semantic.min.css" />
 
 <div class="ui container">
 

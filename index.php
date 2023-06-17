@@ -65,19 +65,19 @@ $contacts = R::findAll('contact');
                 background-color: rgba(0, 0, 0, 0.65);
             }
             .step-1 {
-                background: url(bg.jpg);
+                background: url(assets/img/bg.jpg);
             }
             .step-2 {
-                background: url(bg2.jpg);
+                background: url(assets/img/bg2.jpg);
             }
             .step-3 {
-                background: url(bg3.jpg);
+                background: url(assets/img/bg3.jpg);
             }
             .step-4 {
-                background: url(bg2.jpg);
+                background: url(assets/img/bg2.jpg);
             }
             .step-5 {
-                background: url(bg.jpg);
+                background: url(assets/img/bg.jpg);
             }
             .header {
                 font-size: 0.85rem;
